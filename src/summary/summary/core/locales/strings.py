@@ -11,5 +11,4 @@ class LocaleStrings:
     empty_transcription: str
     download_header_template: str
     hallucination_replacement_text: str
-    document_default_title: str
-    document_title_template: str
+    summary_title_template: str

@@ -26,8 +26,5 @@ Einige Punkte, die wir Ihnen empfehlen zu überprüfen:
         "\n*[Laden Sie hier Ihre Aufnahme herunter (externer Link)]({download_link})*\n"
     ),
     hallucination_replacement_text="[Text konnte nicht transkribiert werden]",
-    document_default_title="Transkription",
-    document_title_template=(
-        'Besprechung "{room}" am {room_recording_date} um {room_recording_time}'
-    ),
+    summary_title_template="Zusammenfassung von {title}",
 )
