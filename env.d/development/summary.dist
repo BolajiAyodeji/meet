@@ -1,7 +1,7 @@
 APP_NAME="meet-app-summary-dev"
 APP_API_TOKEN="password"
 
-AWS_STORAGE_BUCKET_NAME="http://meet-media-storage"
+AWS_STORAGE_BUCKET_NAME="meet-media-storage"
 AWS_S3_ENDPOINT_URL="minio:9000"
 AWS_S3_SECURE_ACCESS=false
 
@@ -22,3 +22,5 @@ WEBHOOK_URL="https://configure-your-url.com"
 
 POSTHOG_API_KEY="your-posthog-key"
 POSTHOG_ENABLED="False"
+
+AUTHORIZED_TENANTS='[{"id": "visio","api_key": "password","webhook_url": "https://configure-your-url.com/api/v1.0/recordings/external-process-hook/","webhook_api_key": "webhook-password","allowed_push_to_docs": true}]'

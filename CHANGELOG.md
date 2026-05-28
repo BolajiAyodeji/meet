@@ -15,7 +15,9 @@ and this project adheres to
 - ✨(frontend) make reaction toolbar responsive on small viewports
 - ✨(frontend) enable reactions on mobile devices
 - ✨(frontend) introduce picture-in-picture meeting
-- ✨(backend) add core.recording.event.parsers.S3Parser 
+- ✨(backend) add core.recording.event.parsers.S3Parser
+- ✨(visio) use compatible with summary v2 #1362
+
 
 ### Changed 
 
@@ -23,6 +25,7 @@ and this project adheres to
 - ✨(backend) expose room configuration to all API consumers
 - 🩹(frontend) improve reaction toolbar centering with dynamic positioning
 - 🚀 (paas) remove buildpack requirements.txt to use the new uv.lock #1349
+- 💥(summary) remove v1 related code #1362
 
 ## [1.16.0] - 2026-05-13
 

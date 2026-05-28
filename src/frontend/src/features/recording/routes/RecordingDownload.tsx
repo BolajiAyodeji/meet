@@ -56,7 +56,9 @@ export const RecordingDownload = () => {
   const isSaved =
     data?.status === RecordingStatus.Saved ||
     data?.status === RecordingStatus.NotificationSucceed ||
-    data?.status === RecordingStatus.FailedToStop
+    data?.status === RecordingStatus.FailedToStop ||
+    data?.status === RecordingStatus.ExternalProcessFailed ||
+    data?.status === RecordingStatus.ExternalProcessSuccessful
 
   const pageTitle = useMemo(() => {
     if (isError) return `${APP_TITLE} - ${t('error.title')}`
@@ -90,6 +92,8 @@ export const RecordingDownload = () => {
   }
 
   if (
+    data.status !== RecordingStatus.ExternalProcessFailed &&
+    data.status !== RecordingStatus.ExternalProcessSuccessful &&
     data.status !== RecordingStatus.Saved &&
     data.status !== RecordingStatus.NotificationSucceed &&
     data.status !== RecordingStatus.FailedToStop
