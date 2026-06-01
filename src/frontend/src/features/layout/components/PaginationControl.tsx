@@ -44,7 +44,8 @@ export function PaginationControl({
   if (totalPageCount <= 1) return null
 
   return (
-    <div
+    <nav
+      aria-label={t('label')}
       className={css({
         position: 'absolute',
         bottom: '1rem',
@@ -74,7 +75,9 @@ export function PaginationControl({
         <RiArrowLeftSLine />
       </Button>
       <span
+        role="status"
         aria-live="polite"
+        aria-atomic="true"
         className={css({
           padding: '0.25rem 0.5rem',
         })}
@@ -93,6 +96,6 @@ export function PaginationControl({
       >
         <RiArrowRightSLine />
       </Button>
-    </div>
+    </nav>
   )
 }
