@@ -8,6 +8,9 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+- ✨(backend) add fallback to save recordings without S3/MinIO webhooks
+
 ## [1.17.0] - 2026-05-31
 
 ### Added

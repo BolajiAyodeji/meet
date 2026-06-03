@@ -326,6 +326,104 @@ def test_handle_egress_ended_does_not_call_metadata_collector_stop_when_conditio
     mock_collector.stop.assert_not_called()
 
 
+@mock.patch(
+    "core.recording.services.recording_events.notification_service."
+    "notify_external_services"
+)
+@mock.patch("core.utils.update_room_metadata")
+@pytest.mark.parametrize(
+    "notify_return_value, recording_status",
+    [(True, "notification_succeeded"), (False, "saved")],
+)
+def test_handle_egress_ended_notifies_external_services_on_complete(  # noqa: PLR0913
+    mock_update_room_metadata,
+    mock_notify_external_services,
+    notify_return_value,
+    recording_status,
+    service,
+    settings,
+):  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    """Should notify external services and set recording status on egress completion."""
+    settings.RECORDING_STORAGE_EVENT_ENABLE = False
+    mock_notify_external_services.return_value = notify_return_value
+
+    recording = RecordingFactory(worker_id="worker-1", status="active")
+    mock_data = mock.MagicMock()
+    mock_data.egress_info.egress_id = recording.worker_id
+    mock_data.egress_info.status = EgressStatus.EGRESS_COMPLETE
+
+    service._handle_egress_ended(mock_data)
+
+    mock_notify_external_services.assert_called_once_with(recording)
+
+    recording.refresh_from_db()
+    assert recording.status == recording_status
+
+
+@mock.patch("core.utils.update_room_metadata")
+def test_handle_egress_ended_does_not_save_when_webhooks_enabled(
+    mock_update_room_metadata, service, settings
+):
+    """Should not save the recording on egress completion when event webhooks are enabled."""
+    settings.RECORDING_STORAGE_EVENT_ENABLE = True
+
+    recording = RecordingFactory(worker_id="worker-1", status="active")
+    mock_data = mock.MagicMock()
+    mock_data.egress_info.egress_id = recording.worker_id
+    mock_data.egress_info.status = EgressStatus.EGRESS_COMPLETE
+
+    service._handle_egress_ended(mock_data)
+
+    recording.refresh_from_db()
+    assert recording.status == "active"
+
+
+@pytest.mark.parametrize(
+    "egress_status", [EgressStatus.EGRESS_ABORTED, EgressStatus.EGRESS_FAILED]
+)
+@mock.patch("core.utils.update_room_metadata")
+def test_handle_egress_ended_does_not_save_on_non_complete_status(
+    mock_update_room_metadata, egress_status, service, settings
+):
+    """Should only save the recording for an EGRESS_COMPLETE status."""
+    settings.RECORDING_STORAGE_EVENT_ENABLE = False
+
+    recording = RecordingFactory(worker_id="worker-1", status="active")
+    mock_data = mock.MagicMock()
+    mock_data.egress_info.egress_id = recording.worker_id
+    mock_data.egress_info.status = egress_status
+
+    service._handle_egress_ended(mock_data)
+
+    recording.refresh_from_db()
+    assert recording.status == "active"
+
+
+@pytest.mark.parametrize(
+    "status", ["failed_to_start", "aborted", "failed_to_stop", "saved", "initiated"]
+)
+@mock.patch("core.utils.update_room_metadata")
+def test_handle_egress_ended_ignores_non_savable_recording(
+    mock_update_room_metadata, status, service, settings
+):
+    """Should handle non-savable recordings idempotently without raising.
+
+    'egress_ended' may be redelivered (e.g. for an already-saved recording);
+    this must not raise, otherwise the webhook would 500 and LiveKit would retry.
+    """
+    settings.RECORDING_STORAGE_EVENT_ENABLE = False
+
+    recording = RecordingFactory(worker_id="worker-1", status=status)
+    mock_data = mock.MagicMock()
+    mock_data.egress_info.egress_id = recording.worker_id
+    mock_data.egress_info.status = EgressStatus.EGRESS_COMPLETE
+
+    service._handle_egress_ended(mock_data)
+
+    recording.refresh_from_db()
+    assert recording.status == status
+
+
 @mock.patch.object(LobbyService, "clear_room_cache")
 @mock.patch.object(TelephonyService, "delete_dispatch_rule")
 def test_handle_room_finished_clears_cache_and_deletes_dispatch_rule(

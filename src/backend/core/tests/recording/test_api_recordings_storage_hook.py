@@ -37,6 +37,16 @@ def mock_get_parser():
         yield mock_parser
 
 
+@pytest.fixture
+def mock_notify_external_services():
+    """Mock external services notification."""
+    with mock.patch(
+        "core.recording.services.recording_events.notification_service."
+        "notify_external_services"
+    ) as mocked:
+        yield mocked
+
+
 def test_save_recording_anonymous(settings, client):
     """Anonymous users should not be allowed to save room recordings."""
     settings.RECORDING_STORAGE_EVENT_TOKEN = "testAuthToken"
@@ -224,3 +234,40 @@ def test_save_recording_success(recording_settings, mock_get_parser, client, sta
 
     recording.refresh_from_db()
     assert recording.status == RecordingStatusChoices.SAVED
+
+
+@pytest.mark.parametrize("notification_succeeded", [True, False])
+def test_save_recording_notifies_external_services(
+    recording_settings,
+    mock_get_parser,
+    mock_notify_external_services,
+    client,
+    notification_succeeded,
+):
+    """External services should be notified when a recording is saved."""
+
+    recording = RecordingFactory(status="active")
+
+    mock_parser = mock.Mock()
+    mock_parser.get_recording_id.return_value = recording.id
+    mock_get_parser.return_value = mock_parser
+
+    mock_notify_external_services.return_value = notification_succeeded
+
+    response = client.post(
+        "/api/v1.0/recordings/storage-hook/",
+        {"recording_data": "valid-data"},
+        HTTP_AUTHORIZATION="Bearer testAuthToken",
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "Event processed."}
+
+    mock_notify_external_services.assert_called_once_with(recording)
+
+    recording.refresh_from_db()
+    assert recording.status == (
+        RecordingStatusChoices.NOTIFICATION_SUCCEEDED
+        if notification_succeeded
+        else RecordingStatusChoices.SAVED
+    )
