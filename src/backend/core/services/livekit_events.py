@@ -89,6 +89,13 @@ class LiveKitEventsService:
     def __init__(self):
         """Initialize with required services."""
 
+        self._webhook_handlers = {
+            "egress_updated": self._handle_egress_updated,
+            "egress_ended": self._handle_egress_ended,
+            "room_started": self._handle_room_started,
+            "room_finished": self._handle_room_finished,
+        }
+
         token_verifier = api.TokenVerifier(
             settings.LIVEKIT_CONFIGURATION["api_key"],
             settings.LIVEKIT_CONFIGURATION["api_secret"],
@@ -137,12 +144,7 @@ class LiveKitEventsService:
             ) from e
 
         # Handle according to received webhook type
-        handler = {
-            "egress_updated": self._handle_egress_updated,
-            "egress_ended": self._handle_egress_ended,
-            "room_started": self._handle_room_started,
-            "room_finished": self._handle_room_finished,
-        }.get(webhook_type.value)
+        handler = self._webhook_handlers.get(webhook_type.value)
 
         if handler is not None:
             handler(data)
